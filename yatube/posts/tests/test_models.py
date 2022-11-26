@@ -28,7 +28,8 @@ class PostModelTest(TestCase):
         }
 
     def test_post_str(self):
-        self.assertEqual(PostModelTest.post.text[:TEXT_LIMIT], str(PostModelTest.post))
+        self.assertEqual(PostModelTest.post.text[:TEXT_LIMIT],
+        str(PostModelTest.post))
 
     def test_post_verbose_name(self):
         for (
