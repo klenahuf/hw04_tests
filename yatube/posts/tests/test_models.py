@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
-from ..models import TEXT_LIMIT, Group, Post
+from ..models import Group, Post
 from .constants import AUTHOR_USERNAME, GROUP_SLUG
 
 User = get_user_model()
@@ -28,8 +28,7 @@ class PostModelTest(TestCase):
         }
 
     def test_post_str(self):
-        self.assertEqual(PostModelTest.post.text[:TEXT_LIMIT],
-        str(PostModelTest.post))
+        self.assertEqual(PostModelTest.post.text[:15], str(PostModelTest.post))
 
     def test_post_verbose_name(self):
         for (
