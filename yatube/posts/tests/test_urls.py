@@ -4,7 +4,7 @@ from django.urls import reverse
 
 from http import HTTPStatus
 from posts.models import Post, Group
-from .const import (
+from .constants import (
     AUTHOR_USERNAME,
     GROUP_SLUG,
     URL_INDEX,

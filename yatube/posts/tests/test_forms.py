@@ -5,7 +5,7 @@ from django.test import Client, TestCase
 from django.urls import reverse
 
 from ..models import Group, Post
-from .const import AUTHOR_USERNAME, GROUP_SLUG
+from .constants import AUTHOR_USERNAME, GROUP_SLUG
 
 User = get_user_model()
 
