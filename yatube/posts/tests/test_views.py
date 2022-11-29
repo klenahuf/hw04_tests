@@ -106,7 +106,7 @@ class PaginatorViewsTest(TestCase):
         Post.objects.bulk_create(objs)
 
     def setUp(self):
-        self.unauthorized_client = Client() 
+        self.unauthorized_client = Client()
 
     def test_paginator_on_pages_1(self):
         POST_PER_PAGE = 10
@@ -120,6 +120,7 @@ class PaginatorViewsTest(TestCase):
                     ),
                     POST_PER_PAGE,
                 )
+
     def test_paginator_on_pages_2(self):
         page_limit_second = 3
         for reverse_address in PaginatorViewsTest.PAGES_WITH_PAGINATOR:

@@ -48,7 +48,7 @@ class PostModelTest(TestCase):
                 self.assertEqual(
                     post._meta.get_field(field).verbose_name, expected_value
                 )
-    
+
     def test_help_text(self):
         post = PostModelTest.post
         field_help_texts = {

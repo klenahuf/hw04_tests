@@ -24,13 +24,13 @@ class PostURLTests(TestCase):
         cls.user = User.objects.create_user(username="some_user")
 
         cls.group = Group.objects.create(
-            title="группа", 
-            slug=GROUP_SLUG, 
+            title="группа",
+            slug=GROUP_SLUG,
             description="проверка описания"
         )
         cls.post = Post.objects.create(
-            text="Тестовый текст", 
-            author=cls.author_user, 
+            text="Тестовый текст",
+            author=cls.author_user,
             group=cls.group
         )
         cls.POST_URL = reverse("posts:post_detail", args=[cls.post.id])
@@ -71,10 +71,9 @@ class PostURLTests(TestCase):
             adress, status, client = test
             with self.subTest(test=test):
                 self.assertEqual(
-                client.get(adress).status_code,
-                status,
-                f"{adress} вернул другой статус код. А должен был {status}",
-            )
+                    client.get(adress).status_code,
+                    status,
+                )
 
     def test_task_list_url_redirect_anonymous(self):
         response = self.authorized_client.get("/unexisting_page/")
@@ -87,7 +86,6 @@ class PostURLTests(TestCase):
                 self.assertTemplateUsed(
                     response,
                     template,
-                    f"неверный шаблон - {template} для адреса {url}",
                 )
 
     def test_post_urls_redirects_correct(self):
