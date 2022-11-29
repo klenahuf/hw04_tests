@@ -20,12 +20,18 @@ class PostURLTests(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.author_user = User.objects.create(username=AUTHOR_USERNAME)
+        cls.author_user = User.objects.create_user(username=AUTHOR_USERNAME)
+        cls.user = User.objects.create_user(username="some_user")
+
         cls.group = Group.objects.create(
-            title="группа", slug=GROUP_SLUG, description="проверка описания"
+            title="группа", 
+            slug=GROUP_SLUG, 
+            description="проверка описания"
         )
         cls.post = Post.objects.create(
-            text="Тестовый текст", author=cls.author_user, group=cls.group
+            text="Тестовый текст", 
+            author=cls.author_user, 
+            group=cls.group
         )
         cls.POST_URL = reverse("posts:post_detail", args=[cls.post.id])
         cls.POST_EDIT_URL = reverse("posts:post_edit", args=[cls.post.id])
@@ -40,9 +46,8 @@ class PostURLTests(TestCase):
 
     def setUp(self):
         self.guest_client = Client()
-        self.user = User.objects.create_user(username="some_user")
         self.authorized_client = Client()
-        self.authorized_client.force_login(self.user)
+        self.authorized_client.force_login(PostURLTests.user)
         self.author_client = Client()
         self.author_client.force_login(PostURLTests.author_user)
 
@@ -64,7 +69,8 @@ class PostURLTests(TestCase):
         ]
         for test in address_status_client:
             adress, status, client = test
-            self.assertEqual(
+            with self.subTest(test=test):
+                self.assertEqual(
                 client.get(adress).status_code,
                 status,
                 f"{adress} вернул другой статус код. А должен был {status}",

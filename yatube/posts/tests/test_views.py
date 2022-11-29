@@ -4,6 +4,7 @@ from django.test import Client, TestCase
 from django.urls import reverse
 
 from ..models import Group, Post
+from ..utils import POST_PER_PAGE
 from .constants import (
     AUTHOR_USERNAME,
     GROUP_SLUG,
@@ -12,6 +13,7 @@ from .constants import (
     URL_AUTHOR_PROFILE,
     URL_CREATE_POST,
 )
+
 
 User = get_user_model()
 
@@ -44,38 +46,10 @@ class PostPagesTests(TestCase):
         self.assertEqual(post.group, PostPagesTests.post.group)
         self.assertEqual(post.pk, PostPagesTests.post.pk)
 
-    def test_create_edit_pages_show_correct_context(self):
-        adresses = (URL_CREATE_POST, PostPagesTests.POST_EDIT_URL)
-        for adress in adresses:
-            with self.subTest(adress=adress):
-                response = self.author_client.get(adress)
-                self.assertIsInstance(
-                    response.context["form"].fields["text"],
-                    forms.fields.CharField,
-                )
-                self.assertIsInstance(
-                    response.context["form"].fields["group"],
-                    forms.fields.ChoiceField,
-                )
-
-    def test_post_pages_show_correct_context(self):
-        addresses = [
-            URL_INDEX,
-            URL_GROUP,
-            URL_AUTHOR_PROFILE,
-            PostPagesTests.POST_URL,
-        ]
-        for adress in addresses:
-            response = self.author_client.get(adress)
-            if (
-                "page_obj" in response.context
-            ):
-                post = response.context.get("page_obj")[
-                    0
-                ]
-            else:
-                post = response.context.get("post")
-            self.check_post_info(post)
+    def test_index_page_have_correct_context(self):
+        response = self.author_client.get(URL_INDEX)
+        post = response.context.get("post")
+        self.check_post_info(post)
 
     def test_group_page_show_correct_context(self):
         group = self.author_client.get(URL_GROUP).context.get("group")
@@ -91,8 +65,30 @@ class PostPagesTests(TestCase):
         self.assertEqual(author.username, PostPagesTests.author_user.username)
         self.assertEqual(author.pk, PostPagesTests.author_user.pk)
 
+    def test_post_detail_show_correct_context(self):
+        response = self.author_client.get(PostPagesTests.POST_URL)
+        post = response.context.get("post")
+        self.check_post_info(post)
+
+    def test_create_edit_pages_show_correct_context(self):
+        adresses = (URL_CREATE_POST, PostPagesTests.POST_EDIT_URL)
+        for adress in adresses:
+            with self.subTest(adress=adress):
+                response = self.author_client.get(adress)
+                self.assertIsInstance(
+                    response.context["form"].fields["text"],
+                    forms.fields.CharField,
+                )
+                self.assertIsInstance(
+                    response.context["form"].fields["group"],
+                    forms.fields.ChoiceField,
+                )
+
 
 class PaginatorViewsTest(TestCase):
+    page_limit_second = 3
+    count_range = POST_PER_PAGE + page_limit_second
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -104,17 +100,16 @@ class PaginatorViewsTest(TestCase):
         )
         cls.PAGES_WITH_PAGINATOR = [URL_INDEX, URL_GROUP, URL_AUTHOR_PROFILE]
         objs = [
-            Post(text=f"Пост #{i}", author=cls.user, group=cls.group)
-            for i in range(13)
+            Post(text=f"Пост #{count}", author=cls.user, group=cls.group)
+            for count in range(cls.count_range)
         ]
         Post.objects.bulk_create(objs)
 
     def setUp(self):
-        self.unauthorized_client = Client()
+        self.unauthorized_client = Client() 
 
-    def test_paginator_on_pages(self):
-        posts_on_first_page = 10
-        posts_on_second_page = 3
+    def test_paginator_on_pages_1(self):
+        POST_PER_PAGE = 10
         for reverse_address in PaginatorViewsTest.PAGES_WITH_PAGINATOR:
             with self.subTest(reverse_address=reverse_address):
                 self.assertEqual(
@@ -123,13 +118,17 @@ class PaginatorViewsTest(TestCase):
                             reverse_address
                         ).context.get("page_obj")
                     ),
-                    posts_on_first_page,
+                    POST_PER_PAGE,
                 )
+    def test_paginator_on_pages_2(self):
+        page_limit_second = 3
+        for reverse_address in PaginatorViewsTest.PAGES_WITH_PAGINATOR:
+            with self.subTest(reverse_address=reverse_address + "?page=2"):
                 self.assertEqual(
                     len(
                         self.unauthorized_client.get(
                             reverse_address + "?page=2"
                         ).context.get("page_obj")
                     ),
-                    posts_on_second_page,
+                    page_limit_second,
                 )
