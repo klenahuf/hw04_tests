@@ -45,10 +45,9 @@ class PostPagesTests(TestCase):
         self.assertEqual(post.group, PostPagesTests.post.group)
         self.assertEqual(post.pk, PostPagesTests.post.pk)
 
-    def test_index_page_have_correct_context(self):
+    def test_index_page_show_correct_context(self):
         response = self.author_client.get(URL_INDEX)
-        post = response.context.get('page_obj')
-        self.check_post_info(post)
+        self.check_post_info(response.context["page_obj"][0])
 
     def test_group_page_show_correct_context(self):
         group = self.author_client.get(URL_GROUP).context.get("group")
@@ -66,8 +65,7 @@ class PostPagesTests(TestCase):
 
     def test_post_detail_show_correct_context(self):
         response = self.author_client.get(PostPagesTests.POST_URL)
-        post = response.context.get("post")
-        self.check_post_info(post)
+        self.check_post_info(response.context["post"])
 
     def test_create_edit_pages_show_correct_context(self):
         adresses = (URL_CREATE_POST, PostPagesTests.POST_EDIT_URL)
