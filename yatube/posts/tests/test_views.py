@@ -14,7 +14,6 @@ from .constants import (
     URL_CREATE_POST,
 )
 
-
 User = get_user_model()
 
 
