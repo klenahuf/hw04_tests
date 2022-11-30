@@ -47,7 +47,7 @@ class PostPagesTests(TestCase):
 
     def test_index_page_have_correct_context(self):
         response = self.author_client.get(URL_INDEX)
-        post = response.context.get("post")
+        post = response.context.get('page_obj')
         self.check_post_info(post)
 
     def test_group_page_show_correct_context(self):
