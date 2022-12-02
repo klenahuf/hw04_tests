@@ -3,6 +3,8 @@ from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
 
+from random import randint
+
 from ..models import Group, Post
 from ..utils import POST_PER_PAGE
 from .constants import (
@@ -15,6 +17,10 @@ from .constants import (
 )
 
 User = get_user_model()
+
+first_page = POST_PER_PAGE
+second_page = randint(1, POST_PER_PAGE)
+total_posts = POST_PER_PAGE + second_page
 
 
 class PostPagesTests(TestCase):
@@ -40,28 +46,27 @@ class PostPagesTests(TestCase):
         self.author_client.force_login(PostPagesTests.author_user)
 
     def check_post_info(self, post):
-        self.assertEqual(post.text, PostPagesTests.post.text)
-        self.assertEqual(post.author, PostPagesTests.post.author)
-        self.assertEqual(post.group, PostPagesTests.post.group)
-        self.assertEqual(post.pk, PostPagesTests.post.pk)
+        with self.subTest(post=post):
+            self.assertEqual(post.text, PostPagesTests.post.text)
+            self.assertEqual(post.author, PostPagesTests.post.author)
+            self.assertEqual(post.group, PostPagesTests.post.group)
+            self.assertEqual(post.pk, PostPagesTests.post.pk)
 
     def test_index_page_show_correct_context(self):
         response = self.author_client.get(URL_INDEX)
         self.check_post_info(response.context["page_obj"][0])
 
     def test_group_page_show_correct_context(self):
-        group = self.author_client.get(URL_GROUP).context.get("group")
-        self.assertEqual(group.title, PostPagesTests.group.title)
-        self.assertEqual(group.slug, PostPagesTests.group.slug),
-        self.assertEqual(group.pk, PostPagesTests.group.pk),
-        self.assertEqual(group.description, PostPagesTests.group.description)
+        response = self.author_client.get(URL_GROUP)
+        self.assertEqual(response.context['group'], PostPagesTests.post.group)
+        self.check_post_info(response.context["page_obj"][0])
 
     def test_profile_page_show_correct_context(self):
-        author = self.author_client.get(URL_AUTHOR_PROFILE).context.get(
-            "author"
-        )
-        self.assertEqual(author.username, PostPagesTests.author_user.username)
-        self.assertEqual(author.pk, PostPagesTests.author_user.pk)
+        response = self.author_client.get(URL_AUTHOR_PROFILE)
+        self.assertEqual(
+            response.context['author'],
+            PostPagesTests.post.author)
+        self.check_post_info(response.context['page_obj'][0])
 
     def test_post_detail_show_correct_context(self):
         response = self.author_client.get(PostPagesTests.POST_URL)
@@ -83,8 +88,6 @@ class PostPagesTests(TestCase):
 
 
 class PaginatorViewsTest(TestCase):
-    page_limit_second = 3
-    count_range = POST_PER_PAGE + page_limit_second
 
     @classmethod
     def setUpClass(cls):
@@ -98,7 +101,7 @@ class PaginatorViewsTest(TestCase):
         cls.PAGES_WITH_PAGINATOR = [URL_INDEX, URL_GROUP, URL_AUTHOR_PROFILE]
         objs = [
             Post(text=f"Пост #{count}", author=cls.user, group=cls.group)
-            for count in range(cls.count_range)
+            for count in range(total_posts)
         ]
         Post.objects.bulk_create(objs)
 
@@ -106,7 +109,6 @@ class PaginatorViewsTest(TestCase):
         self.unauthorized_client = Client()
 
     def test_paginator_on_pages_1(self):
-        POST_PER_PAGE = 10
         for reverse_address in PaginatorViewsTest.PAGES_WITH_PAGINATOR:
             with self.subTest(reverse_address=reverse_address):
                 self.assertEqual(
@@ -119,7 +121,6 @@ class PaginatorViewsTest(TestCase):
                 )
 
     def test_paginator_on_pages_2(self):
-        page_limit_second = 3
         for reverse_address in PaginatorViewsTest.PAGES_WITH_PAGINATOR:
             with self.subTest(reverse_address=reverse_address + "?page=2"):
                 self.assertEqual(
@@ -128,5 +129,5 @@ class PaginatorViewsTest(TestCase):
                             reverse_address + "?page=2"
                         ).context.get("page_obj")
                     ),
-                    page_limit_second,
+                    second_page,
                 )
